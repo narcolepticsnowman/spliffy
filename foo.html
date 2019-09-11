@@ -1,0 +1,72 @@
+<html>
+<body>
+<div id="App"></div>
+<script type="text/javascript">
+
+    const myInput = ( prop ) => {
+        const data = {current: 'hello'}
+        return ( { refresh } ) =>
+            div()(
+                input( {
+                           value: data.current,
+                           oninput: ( e ) => {
+                               debugger
+                               data.current = e.target.value && refresh()
+                           }
+                       } ),
+                p()( `here's my prop: ${prop} here's my data ${data.current}` )
+            )
+
+    }
+
+    const el = ( tag, attrs ) => ( ...children ) => {
+        let element = document.createElement( tag )
+        if( attrs ) {
+            Object.keys( attrs ).forEach( a => {
+                let attr = attrs[ a ]
+                if( a.startsWith( 'on' ) && typeof attr === 'function' ) element.addEventListener( a.substring( 2 ),
+                                                                                                   attr )
+                element.setAttribute( a, attr )
+            } )
+        }
+
+        const refresh = (i) => () => {
+            element.replaceChild( renderChild(children[i], i), element.childNodes[i])
+        }
+
+        const renderChild = (c, i) => {
+            if( typeof c === 'string' ) return document.createTextNode( c )
+            if( typeof c === 'function' ) return c( { element, refresh: refresh(i) } )
+            if( c instanceof Element || c instanceof HTMLElement ) return c
+            throw `Child type ${typeof c} is not supported. All children must be one of or an array of ['string', 'function', Element, HTMLElement]`
+        }
+
+        const renderChildren = ( childrens ) => childrens.map( (c, i) => renderChild(c, i) )
+
+        element.append( ...renderChildren( children ) )
+        return element
+
+    }
+
+    const div = ( attrs ) => el( 'div', attrs )
+    const p = ( attrs ) => el( 'p', attrs )
+    const code = ( attrs ) => el( 'code', attrs )
+    const pre = ( attrs ) => el( 'pre', attrs )
+    const input = ( attrs ) => el( 'input', attrs )()
+
+    const app = ( rootId, rootContent ) => {
+        let root = document.getElementById( rootId )
+        root.append( rootContent )
+    }
+    app( 'App',
+         div()(
+             myInput( 'mah datas' ),
+             p()( 'Create the start script, ', code()( 'vi ~/app/serve.js' ) ),
+             pre()( code( { class: 'lang-js' } )( 'require(\'spliffy\')({routeDir: __dirname+ \'/www\'})' ) )
+         )
+    )
+
+</script>
+
+</body>
+</html>
