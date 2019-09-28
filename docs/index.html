@@ -11,7 +11,6 @@
 </head>
 <body>
 
-
 <h1 id="-alt-text-spliffy_logo_text_small-png-raw-true-spliffy-logo-"><img src="spliffy_logo_text_small.png"
                                                                            alt="Alt text" title="Spliffy Logo"></h1>
 <blockquote>
@@ -27,13 +26,15 @@
 <p>Create a handler for the desired route name </p>
 <p><code>vi ~/app/www/spliffy.js</code></p>
 <pre><code class="lang-js">module.exports = {
-    GET:() =&gt; ({hello: "spliffy"})
+GET:() =&gt; ({hello: "spliffy"})
 }
 </code></pre>
 <p>Create the start script, <code>vi ~/app/serve.js</code></p>
 <pre><code class="lang-js">require('spliffy')({routeDir: __dirname+ '/www'})</code></pre>
-<p>because the routeDir is ~/app/www, the filename <code>spliffy.js</code> creates the path <code>/spliffy</code></p>
-<p>The object passed to spliffy is the config. See the <a href="#Config">Config</a> section for more information.</p>
+<p>because the routeDir is ~/app/www, the filename <code>spliffy.js</code> creates the path <code>/spliffy</code>
+</p>
+<p>The object passed to spliffy is the config. See the <a href="#Config">Config</a> section for more information.
+</p>
 <p>routeDir is the only required property and should be an absolute path.</p>
 <p><code>10420</code> is the default port for http, and can be changed by setting the port in the config</p>
 <p>start the server
@@ -46,8 +47,8 @@
 
 
 <h2 id="https">HTTPS</h2>
-<p>HTTPS can be enabled by setting the secure.key and secure.cert properties on the <a href="#Config">config</a>. The
-    default https port is 14420.</p>
+<p>HTTPS can be enabled by setting the secure.key and secure.cert properties on the <a href="#Config">config</a>.
+    The default https port is 14420.</p>
 
 
 <h3 id="let-s-encrypt-automated-public-ca-trusted-certs">Let&#39;s Encrypt automated public CA trusted certs</h3>
@@ -238,38 +239,44 @@
 
 <h2 id="security">Security</h2>
 <p>JWT is provided by default to provide authentication and stateless session handling.</p>
-<p>Roles can be applied in multiple ways</p>
+
+<p>Permissions and authentication be applied in multiple ways</p>
 <ul>
-    <li>Application wide</li>
     <li>Path matching</li>
     <li>Specific routes</li>
     <li>Specific methods</li>
 </ul>
 
 
-
-<h3 id="application-wide">Application wide</h3>
-<p>Enable security for every route.<code class="lang-js">config.auth.all = true</code></p>
-<p>Set app wide permissions using </p>
-<p><code class="lang-js">config.auth.appAllow =  { users: ['Space Cowboy'], roles:['/secrets/.*': ['joker', 'mid-night toker'] ] }</code></p>
-
-
 <h3 id="pathMatching">Path Matching</h3>
 <p>A list of regex patterns that will require authentication to access</p>
-<p><code class="lang-js">config.auth.authRequired = [&#39;/secrets&#39;,&#39;/treasure&#39;,&#39;/candy&#39;]</code></p>
-<p>You can override requiring auth by adding the path pattern to the whitelist. This is useful when you want to secure everything except a few routes.</p>
-<p><code class="lang-js">config.auth.whitelist = [&#39;/login&#39;,&#39;/home&#39;,&#39;/&#39;]</code></p>
 
-<h3>Role Matching</h3>
-<p>To specify roles for a path pattern, set <code class="lang-js">config.auth.matchAllow = { users: ['Steve'], roles:['/secrets/.*': ['joker', 'smoker'] ] }</code></p>
+<p><code class="lang-js">config.auth.authRequired = [&#39;/secrets&#39;,&#39;/treasure&#39;,&#39;/candy&#39;]</code>
+</p>
+
+<p>You can override requiring auth by adding patterns to noAuthRequired. This is useful when you want to secure
+    everything except a few routes.</p>
+<p><code class="lang-js">config.auth.noAuthRequired = [&#39;/login&#39;,&#39;/home&#39;,&#39;/&#39;]</code></p>
+
+<h3>App wide permissions</h3>
+<p>Use app wide permissions to specify users and roles that are required to use any end point.</p>
+<p>Routes matched by <code>config.auth.noAuthRequired</code> will still not required these permissions.</p>
+<p><code class="lang-js">config.auth.appAllow = { users: ['Space Cowboy'], roles:['/secrets/.*': ['joker',
+    'mid-night toker'] ] }</code></p>
+
+<h3>Path Matching permissions</h3>
+<p>To specify roles for a path pattern, add an object to matchAllow with the pattern and the allowed users and
+    roles</p>
+<p><code class="lang-js">config.auth.matchAllow = { users: ['Steve'], roles:['/secrets/.*': ['joker', 'smoker'] ]
+    }</code></p>
 
 <h3>Specific Routes and Methods</h3>
-<p>To specify users and roles </p>
+<p>To specify users and roles on a route or method, change your handler export to the following form</p>
 <pre><code class="lang-js">module.exports = {
     allow: {users: ['space cowboy', 'gangster of love' ], roles: ['joker', 'smoker', 'mid-night toker']},
     handlers: {
         GET: {
-            secure: {users: ['Steve Miller'], roles: ['maurice']},
+            allow: {users: ['Steve Miller'], roles: ['maurice']},
             handler: ({url, body, headers, req, res}) =&gt; {
                 body: "hello Mr. Miller"
             }
@@ -278,11 +285,17 @@
 }
 </code></pre>
 
+    <h3>JWT Config</h3>
+    <p>Spliffy uses the jsonwebtoken library for jwt. You should at least set the issuer and audience on the jwt config,
+        but it is not required.</p>
+    <p>You can pass any additional configuration to the <code>jwt.sign()</code> and <code>jwt.verify</code> methods by
+        setting them on either signOpts or verifyOpts of the auth config.</p>
 
-<h2 id="config">Config</h2>
-<p>These are all of the settings available and their defaults. You can include just the properties you want to change or
-    all of them.</p>
-<pre><code class="lang-js">{
+    <h2 id="config">Config</h2>
+    <p>These are all of the settings available and their defaults. You can include just the properties you want to
+        change or
+        all of them.</p>
+    <pre><code class="lang-js">{
     port: 10420,
     routeDir: './www',
     logLevel: 'INFO',
@@ -306,11 +319,18 @@
     },
     staticCacheControl: "max-age=86400",
     auth: {
-        appRoles: ['toker'],
-        whitelist: ['/login','/signup'],
-        secured: ['/stuff/.*']
+        appAllow: { users: ['Space Cowboy'], roles:['/secrets/.*': ['joker', 'mid-night toker'] ] },
+        matchAllow: [ {pattern: '/home', allow: { users: ['towelie'], roles: ['towel'] }} ],
+        authRequired: ['.*'],
+        noAuthRequired: ['/login', '/signup'],
+        jwt: {
+            issuer: "spliffy",
+            audience: "www.spliffy.dev",
+            signOpts: {},
+            verifyOpts: {}
+        }
     },
-    https: {
+    secure: {
         key: "/opt/certs/server.key",
         cert: "/opt/certs/server.cert",
         port: 14420,
@@ -376,6 +396,34 @@
         default
     </li>
     <li><strong>cacheStatic</strong>: cache static files in memory to increase performance. false by default.</li>
+    <li><strong>auth</strong>: Use authentication.
+        <ul>
+            <li><strong>appAllow</strong>: Permissions that apply to all routes except those matched by
+                noAuthRequired
+            </li>
+            <li><strong>matchAllow</strong>: Permissions that apply to routes that match the specified patterns,
+                except those matched by noAuthRequired
+            </li>
+            <li><strong>authRequired</strong>: An array of regex path patterns that determine which routes require
+                authentication
+            </li>
+            <li><strong>noAuthRequired</strong>: An array of regex path patterns that determine which routes DO NOT
+                require authentication. This overrides all other settings.
+            </li>
+            <li><strong>jwt</strong>:
+                <ul>
+                    <li><strong>iss</strong>: The issuer to add as a claim to the jwt token</li>
+                    <li><strong>aud</strong>: The audience to add as a claim to the jwt token</li>
+                    <li><strong>signOpts</strong>: Opts to pass to <a
+                            href="https://www.npmjs.com/package/jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback">jwt.sign()</a>
+                    </li>
+                    <li><strong>verifyOpts</strong>: Opts to pass to <a
+                            href="https://www.npmjs.com/package/jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback">jwt.verify()</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </li>
     <li><strong>secure</strong>: use https for all traffic. All traffic to the http port will be redirected to https
         <ul>
             <li><strong>key</strong>: The path to the key file to use for https</li>
