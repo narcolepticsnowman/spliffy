@@ -61,7 +61,7 @@ module.exports = {
             res.ended = true
             res.writableEnded = true
             res.finalized = true
-            log.error( `Request to ${req.url} was aborted prematurely` )
+            log.warn( `Request to ${req.url} from ${res.remoteAddress || ''} ${res.proxiedRemoteAddress || ''} was aborted. Possible client disconnect.` )
         } )
         const initHeaders = {}
 
